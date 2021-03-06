@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 //map for converting mysql type to golang types
@@ -185,7 +186,7 @@ func (t *Table2Struct) Run() error {
 			// 字段注释
 			var clumnComment string
 			if v.ColumnComment != "" {
-				clumnComment = fmt.Sprintf(" // %s", v.ColumnComment)
+				clumnComment = fmt.Sprintf(" /* %s */", v.ColumnComment)
 			}
 			structContent += fmt.Sprintf("%s%s %s %s%s\n",
 				tab(depth), v.ColumnName, v.Type, v.Tag, clumnComment)
@@ -295,6 +296,9 @@ func (t *Table2Struct) getColumns(table ...string) (tableColumns map[string][]co
 		col.ColumnComment = col.ColumnComment
 		col.ColumnName = t.camelCase(col.ColumnName)
 		col.Type = typeForMysqlToGo[col.Type]
+		if col.Type == "" {
+			col.Type = "interface{}"
+		}
 		jsonTag := col.Tag
 		// 字段首字母本身大写, 是否需要删除tag
 		if t.config.RmTagIfUcFirsted &&
